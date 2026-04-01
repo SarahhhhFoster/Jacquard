@@ -15,7 +15,7 @@ TimelineBar::TimelineBar(ChordTimeline& timeline, Options& options, SessionManag
     auto loadSvg = [](const char* data, int size) -> std::unique_ptr<juce::Drawable>
     {
         auto xml = juce::parseXML(juce::String::fromUTF8(data, size));
-        if (xml) return juce::Drawable::createFromSVGElement(*xml);
+        if (xml) return juce::Drawable::createFromSVG(*xml);
         return nullptr;
     };
     iconCoarser_    = loadSvg(BinaryData::coarser_svg,    BinaryData::coarser_svgSize);
