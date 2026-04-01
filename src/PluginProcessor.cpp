@@ -106,9 +106,8 @@ void JacquardProcessor::processBlock(juce::AudioBuffer<float>& buffer,
             mpe_.allNotesOff(midiOut, 0);
             wasPlaying_ = false;
         }
-        // In standalone, still process the sine bank so preview tones play
-        // even while transport is stopped
-        if (standalone)
+        // Only run the sine bank when a preview is active.
+        if (standalone && previewActive_)
             sineBank_.process(buffer, 0, buffer.getNumSamples());
         ++blockFrame_;
         return;
@@ -236,12 +235,20 @@ void JacquardProcessor::timerCallback()
         return; // Don't overwrite target tones while preview is active
     }
 
-    // Update MPE / sine targets from playhead
-    double ppq = playheadPPQ_.load(std::memory_order_relaxed);
-    auto   tones = tonesAtPPQ(ppq);
-    mpe_.setTargetTones(tones);
+    // Update MPE / sine targets from playhead.
+    // In standalone mode, silence everything while the transport is stopped.
+    const bool standalone = juce::JUCEApplicationBase::isStandaloneApp();
+    const bool isPlaying  = standaloneIsPlaying_.load(std::memory_order_relaxed);
 
-    if (juce::JUCEApplicationBase::isStandaloneApp())
+    std::vector<Tone> tones;
+    if (!standalone || isPlaying)
+    {
+        double ppq = playheadPPQ_.load(std::memory_order_relaxed);
+        tones = tonesAtPPQ(ppq);
+    }
+
+    mpe_.setTargetTones(tones);
+    if (standalone)
         sineBank_.setTones(tones);
 }
 

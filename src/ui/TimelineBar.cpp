@@ -1,4 +1,5 @@
 #include "TimelineBar.h"
+#include <BinaryData.h>
 #include <algorithm>
 #include <cmath>
 
@@ -9,6 +10,19 @@ TimelineBar::TimelineBar(ChordTimeline& timeline, Options& options, SessionManag
     viewEnd_   = options_.viewEndPPQ;
     options_.gridStepPPQ = gridStep();  // initialise shared state
     setOpaque(true);
+
+    // Load SVG icons from embedded binary data
+    auto loadSvg = [](const char* data, int size) -> std::unique_ptr<juce::Drawable>
+    {
+        auto xml = juce::parseXML(juce::String::fromUTF8(data, size));
+        if (xml) return juce::Drawable::createFromSVGElement(*xml);
+        return nullptr;
+    };
+    iconCoarser_    = loadSvg(BinaryData::coarser_svg,    BinaryData::coarser_svgSize);
+    iconFiner_      = loadSvg(BinaryData::finer_svg,      BinaryData::finer_svgSize);
+    iconTriplet_    = loadSvg(BinaryData::triplet_svg,    BinaryData::triplet_svgSize);
+    iconQuintuplet_ = loadSvg(BinaryData::quintuplet_svg, BinaryData::quintuplet_svgSize);
+    iconReset_      = loadSvg(BinaryData::reset_svg,      BinaryData::reset_svgSize);
 }
 
 void TimelineBar::setViewRange(double startPPQ, double endPPQ)
@@ -53,8 +67,8 @@ juce::String TimelineBar::gridLabel() const
     // Normal mode: name based on gridDivisor_
     switch (gridDivisor_)
     {
-        case 1:  return "♩";
-        case 2:  return "♪";
+        case 1:  return "1/4";
+        case 2:  return "1/8";
         case 4:  return "1/16";
         case 8:  return "1/32";
         case 16: return "1/64";
@@ -103,16 +117,16 @@ void TimelineBar::paint(juce::Graphics& g)
     g.setColour(juce::Colour(18, 18, 24));
     g.fillRect(0, 0, W, kGridStripH);
 
-    // Buttons: ½ (coarser), ×2 (finer), 3 (triplet), 5 (quintuplet), label
-    struct Btn { const char* label; int x; int w; bool active; };
-    const Btn btns[] = {
-        { "½",  2,  22, false },
-        { "×2", 26, 22, false },
-        { "3",  52, 20, gridMode_ == GridMode::Triplet    },
-        { "5",  74, 20, gridMode_ == GridMode::Quintuplet },
+    // Buttons: coarser, finer, triplet, quintuplet, reset
+    struct BtnInfo { int x; int w; bool active; juce::Drawable* icon; };
+    const BtnInfo btns[] = {
+        {  2, 22, false,                              iconCoarser_.get()    },
+        { 26, 22, false,                              iconFiner_.get()      },
+        { 52, 20, gridMode_ == GridMode::Triplet,     iconTriplet_.get()    },
+        { 74, 20, gridMode_ == GridMode::Quintuplet,  iconQuintuplet_.get() },
+        { 96, 22, false,                              iconReset_.get()      },
     };
 
-    g.setFont(10.0f);
     for (const auto& btn : btns)
     {
         juce::Colour bg = btn.active
@@ -120,14 +134,17 @@ void TimelineBar::paint(juce::Graphics& g)
             : juce::Colour(50, 50, 65);
         g.setColour(bg);
         g.fillRoundedRectangle((float)btn.x, 2.0f, (float)btn.w, (float)kGridStripH - 4, 3.0f);
-        g.setColour(juce::Colours::white.withAlpha(0.85f));
-        g.drawText(btn.label, btn.x, 2, btn.w, kGridStripH - 4,
-                   juce::Justification::centred, false);
+        if (btn.icon)
+            btn.icon->drawWithin(g,
+                juce::Rectangle<float>((float)btn.x + 2, 3.0f,
+                                       (float)btn.w - 4, (float)kGridStripH - 6),
+                juce::RectanglePlacement::centred, 0.85f);
     }
 
     // Current grid label
     g.setColour(juce::Colours::white.withAlpha(0.5f));
-    g.drawText(gridLabel(), 98, 2, 60, kGridStripH - 4,
+    g.setFont(9.0f);
+    g.drawText(gridLabel(), 122, 2, 60, kGridStripH - 4,
                juce::Justification::centredLeft, false);
 
     // ── Chord area (below strip) ──────────────────────────────────────────────
@@ -239,6 +256,10 @@ void TimelineBar::mouseDown(const juce::MouseEvent& e)
         {
             gridMode_ = (gridMode_ == GridMode::Quintuplet)
                       ? GridMode::Normal : GridMode::Quintuplet;
+        }
+        else if (bx >= 96 && bx < 118)
+        {
+            if (onResetToStart) onResetToStart();
         }
         options_.gridStepPPQ = gridStep();  // keep shared state in sync
         repaint();

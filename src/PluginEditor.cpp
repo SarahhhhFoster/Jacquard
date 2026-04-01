@@ -20,6 +20,15 @@ JacquardEditor::JacquardEditor(JacquardProcessor& proc)
     transportPanel_.setVisible(standalone);
     addChildComponent(transportPanel_); // always added, conditionally shown
 
+    // ── Reset to start ────────────────────────────────────────────────────────
+    timelineBar_.onResetToStart = [this]()
+    {
+        double range = proc_.getOptions().viewEndPPQ - proc_.getOptions().viewStartPPQ;
+        proc_.getOptions().viewStartPPQ = 0.0;
+        proc_.getOptions().viewEndPPQ   = range;
+        proc_.setStandalonePosition(0.0);
+    };
+
     // ── Timeline → heatmap chord selection + preview ──────────────────────────
     timelineBar_.onChordSelected = [this](const juce::Uuid& id)
     {

@@ -16,57 +16,11 @@ Performers in the continuous-pitch domain — string players, vocalists, trombon
 
 ## Data model
 
-```mermaid
-erDiagram
-    Jacquard ||--|| ChordTimeline : "has a"
-    ChordTimeline ||--o{ Chord : contains
-    Chord ||--o{ Tone : "is made of"
-    Chord ||--|| Heatmap : "is represented by"
-    Jacquard ||--|| Options : has
-    Options ||--|| LoopDetails : has
-    Options ||--|| SnapStrategy : has
-
-    ChordTimeline {
-        Chord[] chords
-    }
-    Chord {
-        FullTimeCode start
-        FullTimeCode stop
-        Tone[] tones
-    }
-    Tone {
-        FullTimeCode start
-        FullTimeCode stop
-        float frequency
-        bool enabled
-        Uuid sessionId
-    }
-    Heatmap {
-        float[] curveCurrent "consonance from this chord's own tones — white/cyan"
-        float[] curvePrev    "consonance from the preceding chord's tones — orange/red"
-        float[] curveNext    "consonance from the following chord's tones — blue/purple"
-        bool[]  islandMask   "true within snapRange cents of a local consonance peak"
-    }
-    Options {
-        bool loop
-        bool output
-        bool followServer
-        bool preview
-        LoopDetails loopDetails
-        float snapRange
-        SnapStrategy snapStrategy
-        float heatMapContrast
-        float heatMapBrightness
-        string outputDeviceId
-        double gridStepPPQ
-    }
-    SnapStrategy {
-        Slope  "finds local consonance maxima (parabolic sub-bin interpolation)"
-        Value  "picks the highest consonance value within snapRange"
-    }
-```
+![Data model](static_files/datamodel.svg)
 
 Tone `start`/`stop` are always clamped to their chord's time bounds. `FullTimeCode` is a `double` in PPQ (quarter-note units).
+
+**Heatmap curves:** `curveCurrent` — consonance from this chord's own tones (white/cyan); `curvePrev` — preceding chord (orange/red); `curveNext` — following chord (blue/purple). `islandMask` is `true` within `snapRange` cents of a local consonance peak.
 
 ---
 
@@ -87,12 +41,13 @@ Tone `start`/`stop` are always clamped to their chord's time bounds. `FullTimeCo
 ### Time grid
 The narrow strip at the top of the timeline bar contains grid controls:
 
-| Button | Effect |
-|--------|--------|
-| **½**  | Coarser grid (e.g. 16th → 8th) |
-| **×2** | Finer grid (e.g. 16th → 32nd) |
-| **3**  | Triplet division (⅓ beat; toggles) |
-| **5**  | Quintuplet division (⅕ beat; toggles) |
+| Button  | Effect |
+|---------|--------|
+| **1/2** | Coarser grid (e.g. 16th → 8th) |
+| **x2**  | Finer grid (e.g. 16th → 32nd) |
+| **3**   | Triplet division (1/3 beat; toggles) |
+| **5**   | Quintuplet division (1/5 beat; toggles) |
+| **\|◄** | Reset playhead and view to t = 0 |
 
 Default is 16th notes. A single click in the heatmap creates a tone spanning exactly one subdivision.
 

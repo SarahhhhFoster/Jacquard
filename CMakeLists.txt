@@ -29,6 +29,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(clap-juce-extensions)
 
+# ── Icon binary data ─────────────────────────────────────────────────────────
+juce_add_binary_data(JacquardIcons
+    SOURCES
+        static_files/icons/coarser.svg
+        static_files/icons/finer.svg
+        static_files/icons/triplet.svg
+        static_files/icons/quintuplet.svg
+        static_files/icons/reset.svg
+)
+
 # ── Plugin target ─────────────────────────────────────────────────────────────
 juce_add_plugin(Jacquard
     COMPANY_NAME                    "Jacquard Audio"
@@ -90,6 +100,7 @@ target_compile_definitions(Jacquard
 # ── Link libraries ────────────────────────────────────────────────────────────
 target_link_libraries(Jacquard
     PRIVATE
+        JacquardIcons
         juce::juce_audio_basics
         juce::juce_audio_devices
         juce::juce_audio_processors
