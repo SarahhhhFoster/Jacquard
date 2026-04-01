@@ -17,6 +17,13 @@ OptionsPanel::OptionsPanel(Options& options) : options_(options)
         btn->setColour(juce::ToggleButton::textColourId, juce::Colours::white);
         addAndMakeVisible(btn);
     }
+
+    // Clear All button
+    clearAllBtn_.addListener(this);
+    clearAllBtn_.setColour(juce::TextButton::buttonColourId,   juce::Colour(140, 40, 40));
+    clearAllBtn_.setColour(juce::TextButton::buttonOnColourId, juce::Colour(180, 60, 60));
+    clearAllBtn_.setColour(juce::TextButton::textColourOffId,  juce::Colours::white);
+    addAndMakeVisible(clearAllBtn_);
     loopBtn_.setToggleState(options_.loop,         juce::dontSendNotification);
     outputBtn_.setToggleState(options_.output,     juce::dontSendNotification);
     followBtn_.setToggleState(options_.followServer,juce::dontSendNotification);
@@ -68,6 +75,7 @@ OptionsPanel::OptionsPanel(Options& options) : options_(options)
 
 OptionsPanel::~OptionsPanel()
 {
+    clearAllBtn_.removeListener(this);
     for (auto* btn : { &loopBtn_, &outputBtn_, &followBtn_, &previewBtn_ })
         btn->removeListener(this);
     contrastSlider_.removeListener(this);
@@ -135,10 +143,17 @@ void OptionsPanel::resized()
 
     deviceLabel_.setBounds(row1.removeFromLeft(50));
     deviceBox_.setBounds(row1.removeFromLeft(160));
+    row1.removeFromLeft(12);
+    clearAllBtn_.setBounds(row1.removeFromLeft(70));
 }
 
 void OptionsPanel::buttonClicked(juce::Button* b)
 {
+    if (b == &clearAllBtn_)
+    {
+        if (onClearAll) onClearAll();
+        return;
+    }
     if (b == &loopBtn_)    options_.loop          = loopBtn_.getToggleState();
     if (b == &outputBtn_)  options_.output        = outputBtn_.getToggleState();
     if (b == &followBtn_)  options_.followServer  = followBtn_.getToggleState();

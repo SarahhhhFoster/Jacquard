@@ -52,6 +52,7 @@ public:
 
     void applyOptions();
     void onTimelineChanged();
+    void clearAll();
 
     // ── Preview (message thread) ──────────────────────────────────────────────
     // Outputs all enabled tones in `chord` via MPE (and sine bank in standalone)

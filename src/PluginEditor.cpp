@@ -43,6 +43,15 @@ JacquardEditor::JacquardEditor(JacquardProcessor& proc)
         }
     };
 
+    // ── Freq range → heatmap rebuild ─────────────────────────────────────────
+    heatmap_.onFreqRangeChanged = [this]()
+    {
+        proc_.getHeatmapData().invalidate(proc_.getTimeline(), proc_.getOptions());
+    };
+
+    // ── Clear all ─────────────────────────────────────────────────────────────
+    optionsPanel_.onClearAll = [this]() { proc_.clearAll(); };
+
     // ── Options ───────────────────────────────────────────────────────────────
     optionsPanel_.onOptionsChanged = [this]()
     {

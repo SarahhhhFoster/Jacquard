@@ -206,6 +206,13 @@ void JacquardProcessor::applyOptions()
     }
 }
 
+void JacquardProcessor::clearAll()
+{
+    timeline_.clear();
+    heatmap_.invalidate(timeline_, options_);
+    onTimelineChanged();
+}
+
 void JacquardProcessor::onTimelineChanged()
 {
     // Heatmap is intentionally NOT rebuilt here — only tone structural changes

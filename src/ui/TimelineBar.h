@@ -3,9 +3,7 @@
 #include "../model/Options.h"
 #include "../ipc/SessionManager.h"
 #include <juce_gui_basics/juce_gui_basics.h>
-#include <juce_graphics/juce_graphics.h>
 #include <functional>
-#include <memory>
 #include <optional>
 
 // TimelineBar is the strip above the heatmap.
@@ -74,12 +72,6 @@ private:
     juce::Uuid selectedChordId_;
     float      lastMouseX_{ 0.0f };
 
-    // SVG icons (loaded from BinaryData)
-    std::unique_ptr<juce::Drawable> iconCoarser_;
-    std::unique_ptr<juce::Drawable> iconFiner_;
-    std::unique_ptr<juce::Drawable> iconTriplet_;
-    std::unique_ptr<juce::Drawable> iconQuintuplet_;
-    std::unique_ptr<juce::Drawable> iconReset_;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TimelineBar)
 };

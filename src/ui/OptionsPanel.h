@@ -23,6 +23,9 @@ public:
     // Called when any option changes
     std::function<void()> onOptionsChanged;
 
+    // Called when the user clicks the "Clear All" button
+    std::function<void()> onClearAll;
+
     void paint(juce::Graphics& g) override;
     void resized() override;
 
@@ -37,6 +40,7 @@ private:
     juce::ToggleButton outputBtn_  { "Output" };
     juce::ToggleButton followBtn_  { "Follow" };
     juce::ToggleButton previewBtn_ { "Preview"};
+    juce::TextButton   clearAllBtn_{ "Clear All" };
 
     juce::Label contrastLabel_, brightnessLabel_, snapLabel_, deviceLabel_, stratLabel_;
     juce::Slider contrastSlider_, brightnessSlider_, snapSlider_;

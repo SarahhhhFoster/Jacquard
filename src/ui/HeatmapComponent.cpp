@@ -532,8 +532,7 @@ void HeatmapComponent::mouseWheelMove(const juce::MouseEvent& e,
         double pivotFrac = juce::jlimit(0.0, 1.0,
                                         (std::log(pivotFreq) - logMin) / logRange);
 
-        // Use whichever axis has more movement; on a trackpad deltaY dominates vertical scroll
-        double delta = (std::abs(w.deltaY) >= std::abs(w.deltaX)) ? w.deltaY : -w.deltaX;
+        double delta       = (std::abs(w.deltaY) >= std::abs(w.deltaX)) ? w.deltaY : -w.deltaX;
         double factor      = std::pow(0.9, delta * 5.0);
         double newLogRange = juce::jlimit(1.0, 9.21, logRange * factor);
 
@@ -545,12 +544,34 @@ void HeatmapComponent::mouseWheelMove(const juce::MouseEvent& e,
         if (options_.freqMax < options_.freqMin * 2.0)
             options_.freqMax = options_.freqMin * 2.0;
 
+        if (onFreqRangeChanged) onFreqRangeChanged();
         imageDirty_ = true;
         repaint();
         return;
     }
 
-    // Plain scroll  →  time pan (horizontal); clamp so we can't scroll before t=0
+    // Vertical scroll  →  frequency pan (shift the visible freq range up/down)
+    if (std::abs(w.deltaY) > std::abs(w.deltaX))
+    {
+        double logMin   = std::log(options_.freqMin);
+        double logMax   = std::log(options_.freqMax);
+        double logRange = logMax - logMin;
+        double shift    = -w.deltaY * logRange * 0.06;
+
+        double newLogMin = juce::jlimit(std::log(10.0),    std::log(19000.0), logMin + shift);
+        double newLogMax = newLogMin + logRange;
+        if (newLogMax <= std::log(20000.0))
+        {
+            options_.freqMin = std::exp(newLogMin);
+            options_.freqMax = std::exp(newLogMax);
+            if (onFreqRangeChanged) onFreqRangeChanged();
+        }
+        imageDirty_ = true;
+        repaint();
+        return;
+    }
+
+    // Horizontal scroll  →  time pan; clamp so we can't scroll before t=0
     double viewRange = viewEnd_ - viewStart_;
     double delta     = -w.deltaX * viewRange * 0.1;
     viewStart_ += delta;

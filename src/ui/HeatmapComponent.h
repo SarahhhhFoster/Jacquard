@@ -47,6 +47,10 @@ public:
     std::function<void(const juce::Uuid& chordId, const juce::Uuid&)>   onToneRemoved;
     std::function<void(const juce::Uuid& chordId, const juce::Uuid&, bool)> onToneToggled;
 
+    // Fired when the frequency view range changes (zoom or pan) so the
+    // caller can rebuild the heatmap data for the new range.
+    std::function<void()> onFreqRangeChanged;
+
     // juce::Component overrides
     void paint(juce::Graphics& g) override;
     void resized() override;
