@@ -48,13 +48,22 @@ OptionsPanel::OptionsPanel(Options& options) : options_(options)
     addAndMakeVisible(brightnessSlider_);
 
     // Snap range slider (cents)
-    addLabel(snapLabel_, "Snap (¢)");
+    addLabel(snapLabel_, "Snap (c)");
     snapSlider_.setRange(0.0, 200.0, 1.0);
     snapSlider_.setValue(options_.snapRange, juce::dontSendNotification);
     snapSlider_.setSliderStyle(juce::Slider::LinearHorizontal);
     snapSlider_.setTextBoxStyle(juce::Slider::TextBoxRight, false, 40, 16);
     snapSlider_.addListener(this);
     addAndMakeVisible(snapSlider_);
+
+    // Neighbour weight slider
+    addLabel(neighbourLabel_, "Ctx wt");
+    neighbourSlider_.setRange(0.0, 1.0, 0.01);
+    neighbourSlider_.setValue(options_.neighbourWeight, juce::dontSendNotification);
+    neighbourSlider_.setSliderStyle(juce::Slider::LinearHorizontal);
+    neighbourSlider_.setTextBoxStyle(juce::Slider::TextBoxRight, false, 40, 16);
+    neighbourSlider_.addListener(this);
+    addAndMakeVisible(neighbourSlider_);
 
     // Snap strategy
     addLabel(stratLabel_, "Strategy");
@@ -81,6 +90,7 @@ OptionsPanel::~OptionsPanel()
     contrastSlider_.removeListener(this);
     brightnessSlider_.removeListener(this);
     snapSlider_.removeListener(this);
+    neighbourSlider_.removeListener(this);
     snapStrategyBox_.removeListener(this);
     deviceBox_.removeListener(this);
 }
@@ -133,9 +143,10 @@ void OptionsPanel::resized()
     placeSlider(contrastLabel_,  contrastSlider_);
     placeSlider(brightnessLabel_,brightnessSlider_);
 
-    // Row 2: snap + strategy + device
+    // Row 2: snap + context weight + strategy + device
     row1 = area; // reuse remaining area as row2
     placeSlider(snapLabel_, snapSlider_);
+    placeSlider(neighbourLabel_, neighbourSlider_);
 
     stratLabel_.setBounds(row1.removeFromLeft(50));
     snapStrategyBox_.setBounds(row1.removeFromLeft(80));
@@ -166,6 +177,7 @@ void OptionsPanel::sliderValueChanged(juce::Slider* s)
     if (s == &contrastSlider_)   options_.heatMapContrast   = (float)contrastSlider_.getValue();
     if (s == &brightnessSlider_) options_.heatMapBrightness = (float)brightnessSlider_.getValue();
     if (s == &snapSlider_)       options_.snapRange         = (float)snapSlider_.getValue();
+    if (s == &neighbourSlider_)  options_.neighbourWeight   = (float)neighbourSlider_.getValue();
     if (onOptionsChanged) onOptionsChanged();
 }
 

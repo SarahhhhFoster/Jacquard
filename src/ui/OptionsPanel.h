@@ -42,8 +42,9 @@ private:
     juce::ToggleButton previewBtn_ { "Preview"};
     juce::TextButton   clearAllBtn_{ "Clear All" };
 
-    juce::Label contrastLabel_, brightnessLabel_, snapLabel_, deviceLabel_, stratLabel_;
-    juce::Slider contrastSlider_, brightnessSlider_, snapSlider_;
+    juce::Label contrastLabel_, brightnessLabel_, snapLabel_, deviceLabel_, stratLabel_,
+                neighbourLabel_;
+    juce::Slider contrastSlider_, brightnessSlider_, snapSlider_, neighbourSlider_;
 
     juce::ComboBox snapStrategyBox_;
     juce::ComboBox deviceBox_;

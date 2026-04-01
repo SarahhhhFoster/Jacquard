@@ -50,6 +50,10 @@ struct Options
     // TimelineBar updates this when the user changes the grid.
     double gridStepPPQ = 0.25;  // default = 16th notes
 
+    // How much weight the preceding and following chord's consonance curves
+    // contribute to the snap target.  0 = current chord only; 1 = equal weight.
+    float neighbourWeight = 0.0f;
+
     juce::ValueTree toValueTree() const
     {
         juce::ValueTree vt("Options");
@@ -62,6 +66,7 @@ struct Options
         vt.setProperty("heatMapContrast",   heatMapContrast,  nullptr);
         vt.setProperty("heatMapBrightness", heatMapBrightness,nullptr);
         vt.setProperty("outputDeviceId",    outputDeviceId,   nullptr);
+        vt.setProperty("neighbourWeight",   neighbourWeight,  nullptr);
         vt.setProperty("freqMin",           freqMin,          nullptr);
         vt.setProperty("freqMax",           freqMax,          nullptr);
         vt.setProperty("viewStartPPQ",      viewStartPPQ,     nullptr);
@@ -83,6 +88,7 @@ struct Options
         o.heatMapContrast   = (float)  vt["heatMapContrast"];
         o.heatMapBrightness = (float)  vt["heatMapBrightness"];
         o.outputDeviceId    =          vt["outputDeviceId"].toString();
+        o.neighbourWeight   = (float)  vt["neighbourWeight"];
         o.freqMin           = (double) vt["freqMin"];
         o.freqMax           = (double) vt["freqMax"];
         o.viewStartPPQ      = (double) vt["viewStartPPQ"];

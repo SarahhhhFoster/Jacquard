@@ -92,14 +92,37 @@ double HeatmapComponent::snapPPQToGrid(double ppq) const
 }
 
 // Snap frequency using the heatmap curve for the given chord (if available).
+// If neighbourWeight > 0, the preceding and following chord curves are blended in.
 double HeatmapComponent::snapFreqForChord(double freq, const juce::Uuid& chordId) const
 {
     if (!heatmapData_) return freq;
     for (const auto& hm : *heatmapData_)
     {
-        if (hm.chordId == chordId && !hm.curveCurrent.empty())
+        if (hm.chordId != chordId || hm.curveCurrent.empty()) continue;
+
+        float weight = options_.neighbourWeight;
+        int   bins   = (int)hm.curveCurrent.size();
+
+        if (weight <= 0.0f || (hm.curvePrev.empty() && hm.curveNext.empty()))
             return snapFrequency(freq, hm.curveCurrent,
                                  options_.freqMin, options_.freqMax, options_);
+
+        // Build weighted combination: current + weight*(prev + next)
+        std::vector<float> combined(bins);
+        for (int i = 0; i < bins; ++i)
+        {
+            float prev = ((int)hm.curvePrev.size() == bins) ? hm.curvePrev[i] : 0.0f;
+            float next = ((int)hm.curveNext.size() == bins) ? hm.curveNext[i] : 0.0f;
+            combined[i] = hm.curveCurrent[i] + weight * (prev + next);
+        }
+
+        // Normalize to [0, 1] so thresholds in snapFrequency still apply
+        float maxVal = *std::max_element(combined.begin(), combined.end());
+        if (maxVal > 0.0f)
+            for (auto& v : combined) v /= maxVal;
+
+        return snapFrequency(freq, combined,
+                             options_.freqMin, options_.freqMax, options_);
     }
     return freq;
 }
@@ -359,7 +382,7 @@ void HeatmapComponent::mouseMove(const juce::MouseEvent& e)
         int  octave = mp.note / 12 - 1;
         auto name   = juce::String(noteNames[mp.note % 12]) + juce::String(octave);
         hoverTip_   = juce::String(snapped, 1) + " Hz  " + name
-                    + "  " + (mp.cents >= 0 ? "+" : "") + juce::String(mp.cents, 0) + "¢";
+                    + "  " + (mp.cents >= 0 ? "+" : "") + juce::String(mp.cents, 0) + "c";
 
         if (std::abs(snapped - freq) > 0.5)
             hoverTip_ += "  [snapped]";
