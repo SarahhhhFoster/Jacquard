@@ -175,10 +175,10 @@ void TimelineBar::paint(juce::Graphics& g)
 
         juce::Colour fill = sel ? juce::Colour(80, 60, 140) : juce::Colour(50, 40, 90);
         g.setColour(fill.withAlpha(0.75f));
-        g.fillRect(x1, (float)chordY + 2, x2 - x1, (float)chordH - 4);
+        g.fillRoundedRectangle(x1, (float)chordY + 2, x2 - x1, (float)chordH - 4, 4.0f);
 
         g.setColour(juce::Colours::white.withAlpha(sel ? 0.7f : 0.3f));
-        g.drawRect(x1, (float)chordY + 2, x2 - x1, (float)chordH - 4, 1.0f);
+        g.drawRoundedRectangle(x1, (float)chordY + 2, x2 - x1, (float)chordH - 4, 4.0f, 1.0f);
 
         g.setColour(juce::Colours::white.withAlpha(0.5f));
         g.fillRect(x1,        (float)chordY + 2, 4.0f, (float)chordH - 4);

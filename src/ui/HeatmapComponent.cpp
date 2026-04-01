@@ -158,7 +158,13 @@ void HeatmapComponent::renderBackground(juce::Graphics& g)
 
                 if (hm && hm->numBins > 0)
                 {
-                    int   bin      = juce::jlimit(0, hm->numBins - 1, (int)(y * hm->numBins / H));
+                    // bin 0 = freqMin (bottom), bin N-1 = freqMax (top)
+                    // pixel y=0 = top = freqMax, y=H = bottom = freqMin
+                    // both axes are log-spaced with the same freqMin/freqMax,
+                    // so the mapping is simply: bin = (1 - y/H) * (N-1)
+                    int   bin      = juce::jlimit(0, hm->numBins - 1,
+                                         (int)std::round((1.0 - (double)y / H)
+                                                         * (hm->numBins - 1)));
                     bool  inIsland = hm->islandMask.empty() || hm->islandMask[bin];
                     float dimFactor = inIsland ? 1.0f : 0.10f;
 
@@ -228,7 +234,7 @@ void HeatmapComponent::renderChordDividers(juce::Graphics& g, const std::vector<
 
 void HeatmapComponent::renderTones(juce::Graphics& g, const std::vector<Chord>& chords)
 {
-    const float toneRadius = 4.0f;
+    const float toneRadius = 6.0f;
 
     for (const auto& chord : chords)
     {
@@ -257,7 +263,7 @@ void HeatmapComponent::renderTones(juce::Graphics& g, const std::vector<Chord>& 
 
             float barH = toneRadius * 2.0f;
             g.setColour(col);
-            g.fillRoundedRectangle(x1, y - toneRadius, x2 - x1, barH, 2.0f);
+            g.fillRoundedRectangle(x1, y - toneRadius, x2 - x1, barH, 4.0f);
 
             if (x2 - x1 > 40)
             {
@@ -522,6 +528,27 @@ void HeatmapComponent::mouseUp(const juce::MouseEvent& e)
 void HeatmapComponent::mouseWheelMove(const juce::MouseEvent& e,
                                        const juce::MouseWheelDetails& w)
 {
+    if (e.mods.isAltDown())
+    {
+        // Option+scroll  →  time-domain zoom, centred on cursor's PPQ position
+        double pivotPPQ  = pixelToPPQ(e.position.x);
+        double range     = viewEnd_ - viewStart_;
+        double pivotFrac = juce::jlimit(0.0, 1.0, (pivotPPQ - viewStart_) / range);
+
+        double delta    = (std::abs(w.deltaY) >= std::abs(w.deltaX)) ? w.deltaY : w.deltaX;
+        double factor   = std::pow(0.9, delta * 3.0);
+        double newRange = juce::jlimit(0.25, 256.0, range * factor);
+
+        viewStart_ = std::max(0.0, pivotPPQ - pivotFrac * newRange);
+        viewEnd_   = viewStart_ + newRange;
+
+        options_.viewStartPPQ = viewStart_;
+        options_.viewEndPPQ   = viewEnd_;
+        imageDirty_ = true;
+        repaint();
+        return;
+    }
+
     if (e.mods.isCommandDown())
     {
         // Cmd+scroll  →  frequency-domain zoom, centred on the cursor's frequency
@@ -605,7 +632,7 @@ void HeatmapComponent::scrollBarMoved(juce::ScrollBar*, double) {}
 
 Tone* HeatmapComponent::toneAtPixel(float x, float y, juce::Uuid& chordIdOut)
 {
-    const float toneRadius = 5.0f;
+    const float toneRadius = 7.0f;
     auto chordsCopy = timeline_.getChordsCopy();
 
     for (auto& chord : chordsCopy)
